@@ -11,8 +11,10 @@ pipeline {
 
         stage('Dependency Audit') {
             steps {
-                sh 'npm install'
-                sh 'npm audit --json > audit-report.json || true'
+                node('node-24.7'){
+                    sh 'npm install'
+                    sh 'npm audit --json > audit-report.json || true'
+                }   
             }
         }
 
