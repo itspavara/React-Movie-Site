@@ -12,12 +12,13 @@ pipeline {
         }
 
         stage('Dependency Audit') {
-            agent { label 'node-24.7' } // run on a node with Node.js installed
             steps {
-                sh 'npm install'
-                sh 'npm audit --json > audit-report.json || true'
+                nodejs('node-24.7') {      
+                    sh 'npm install'
+                    sh 'npm audit --json > audit-report.json || true'
+                }
             }
-        }
+}
 
       stage('check report'){
             steps {
