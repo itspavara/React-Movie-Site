@@ -3,18 +3,19 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-              git branch: 'main', 
-              url: 'https://github.com/itspavara/React-Movie-Site.git',
-              credentialsId: 'itspavara' // saved in Jenkins
+               git(
+                    branch: 'main',
+                    url: 'https://github.com/itspavara/React-Movie-Site.git',
+                    credentialsId: 'itspavara'
+                )
             }
         }
 
         stage('Dependency Audit') {
+            agent { label 'node-24.7' } // run on a node with Node.js installed
             steps {
-                node('node-24.7'){
-                    sh 'npm install'
-                    sh 'npm audit --json > audit-report.json || true'
-                }   
+                sh 'npm install'
+                sh 'npm audit --json > audit-report.json || true'
             }
         }
 
