@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent slave
 
     environment {
         GH_TOKEN = credentials('github-token') 
