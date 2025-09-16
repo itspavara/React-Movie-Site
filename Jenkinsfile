@@ -99,20 +99,20 @@ pipeline {
                         }.join("\n\n")
         
                         writeFile file: 'summary.md', text: """
-        ### Security Audit Report (Build #${BUILD_NUMBER})
-        
-        ${summary}
-        
-        ${details}
-        
-        📎 Full JSON audit report is available in Jenkins artifacts.
-        """
-                    } else {
-                        writeFile file: 'summary.md', text: """
-        ### Security Audit Report (Build #${BUILD_NUMBER})
-        
-        ✅ No critical, high, or moderate vulnerabilities found.
-        """
+### Security Audit Report (Build #${BUILD_NUMBER})
+
+${summary}
+
+${details}
+
+📎 Full JSON audit report is available in Jenkins artifacts.
+"""
+            } else {
+                writeFile file: 'summary.md', text: """
+### Security Audit Report (Build #${BUILD_NUMBER})
+
+✅ No critical, high, or moderate vulnerabilities found.
+"""
                     }
                 }
             }
