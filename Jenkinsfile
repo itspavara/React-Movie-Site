@@ -41,17 +41,27 @@ pipeline {
                 script {
                     def finalVulns = []
                     def rawContent = readFile('audit-report.json')
-
+        
                     if (fileExists('package-lock.json')) {
                         // NPM audit report
                         def npmReport = readJSON text: rawContent
                         if (npmReport.vulnerabilities) {
                             npmReport.vulnerabilities.each { name, vuln ->
                                 if (vuln.severity in ['critical', 'high', 'moderate']) {
+                                    def issues = []
+                                    vuln.via.each { v ->
+                                        if (v instanceof Map) {
+                                            issues << [
+                                                title: v.title,
+                                                url  : v.url,
+                                                range: v.range
+                                            ]
+                                        }
+                                    }
                                     finalVulns << [
                                         package : name,
                                         severity: vuln.severity,
-                                        via     : vuln.via
+                                        issues  : issues
                                     ]
                                 }
                             }
@@ -67,35 +77,42 @@ pipeline {
                                         finalVulns << [
                                             package : obj.data.advisory.module_name,
                                             severity: sev,
-                                            title   : obj.data.advisory.title
+                                            issues  : [[
+                                                title: obj.data.advisory.title,
+                                                url  : obj.data.advisory.url,
+                                                range: obj.data.advisory.vulnerable_versions
+                                            ]]
                                         ]
                                     }
                                 }
                             }
                         }
                     }
-
+        
                     if (finalVulns.size() > 0) {
-                        def summary = "Found ${finalVulns.size()} critical/high/moderate vulnerabilities"
+                        def summary = "Found ${finalVulns.size()} critical/high/moderate vulnerable packages"
                         def details = finalVulns.collect { v ->
-                            "- **${v.package}** (${v.severity}): ${v.title ?: v.via}"
-                        }.join("\n")
-
+                            def issuesText = v.issues.collect { i ->
+                                """title:${i.title}, url:${i.url}, \nrange:${i.range}"""
+                            }.join("\n")
+                            "- **${v.package}** (${v.severity}):\n${issuesText}"
+                        }.join("\n\n")
+        
                         writeFile file: 'summary.md', text: """
-### Security Audit Report (Build #${BUILD_NUMBER})
-
-${summary}
-
-${details}
-
-📎 Full JSON audit report is available in Jenkins artifacts.
-"""
+        ### Security Audit Report (Build #${BUILD_NUMBER})
+        
+        ${summary}
+        
+        ${details}
+        
+        📎 Full JSON audit report is available in Jenkins artifacts.
+        """
                     } else {
                         writeFile file: 'summary.md', text: """
-### Security Audit Report (Build #${BUILD_NUMBER})
-
-✅ No critical, high, or moderate vulnerabilities found.
-"""
+        ### Security Audit Report (Build #${BUILD_NUMBER})
+        
+        ✅ No critical, high, or moderate vulnerabilities found.
+        """
                     }
                 }
             }
